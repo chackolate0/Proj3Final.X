@@ -4,6 +4,18 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>acl.h</itemPath>
+      <itemPath>adc.h</itemPath>
+      <itemPath>aic.h</itemPath>
+      <itemPath>btn.h</itemPath>
+      <itemPath>config.h</itemPath>
+      <itemPath>lcd.h</itemPath>
+      <itemPath>i2c.h</itemPath>
+      <itemPath>ssd.h</itemPath>
+      <itemPath>swt.h</itemPath>
+      <itemPath>uart.h</itemPath>
+      <itemPath>utils.h</itemPath>
+      <itemPath>../../../../Program Files (x86)/Microchip/xc32/v2.10/pic32mx/include/xc.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -12,6 +24,17 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>acl.c</itemPath>
+      <itemPath>adc.c</itemPath>
+      <itemPath>aic.c</itemPath>
+      <itemPath>btn.c</itemPath>
+      <itemPath>i2c.c</itemPath>
+      <itemPath>Proj3.c</itemPath>
+      <itemPath>lcd.c</itemPath>
+      <itemPath>ssd.c</itemPath>
+      <itemPath>swt.c</itemPath>
+      <itemPath>uart.c</itemPath>
+      <itemPath>utils.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -19,6 +42,10 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem></Elem>
+    <Elem>../../../../Program Files (x86)/Microchip/xc32/v2.10/pic32mx/include</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
