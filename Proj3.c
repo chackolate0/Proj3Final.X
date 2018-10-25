@@ -82,78 +82,138 @@
 #include "ssd.h"
 #include "swt.h"
 #include "uart.h"
+#include <math.h>
+#include "rgbled.h"
 
 /* TODO:  Include other files here if needed. */
 #define SYS_FREQ (80000000L)
-#define INT_SEC 10
-#define CORE_TICK_RATE (SYS_FREQ/2/INT_SEC)
+#define INTSEC 10
+#define CORE_TICK_RATE (SYS_FREQ/2/INTSEC)
 
 int potVal;
+enum displayState {XY, ZX, YZ};
+int position = XY;
+int buttonLock = 0;
+
+char accelDisplay[80];
+float xVal = 1.303;
+float yVal = -4.70;
+float zVal = 0.132; 
+int xPrecision;
+int yPrecision;
+int zPrecision;
 
 int main(void){
-    OpenCoreTimer(CORE_TICK_RATE);
-    INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
-    mConfigIntCoreTimer(CT_INT_ON | CT_INT_PRIOR_5 | CT_INT_SUB_PRIOR_0);
-    INTEnableSystemMultiVectoredInt();
-    ACL_Init();
-    AIC_Init();
     BTN_Init();
+    //RGBLED_Init();
+    ADC_Init();
     LCD_Init();
     SSD_Init();
-    SWT_Init();
-    //UART_Init(baud);
-    char coords[80];
-    char sensitivity;
-    char stringVal[80];
-    int accelX=10;
-    int accelY=6;
-    int accelZ=14;
-    enum states{XY, ZX, YZ};
-    int axisState = XY;
-    unsigned char accelData[06];
+    
+    LCD_WriteStringAtPos("Team: 1 SENS: 2G",0,0);
+    update_SSD(0);
     
     while(1){
-        sprintf(stringVal,"Team: 1  SENS: %dG", sensitivity);
-        LCD_WriteStringAtPos(stringVal, 0, 0);
-        potVal=AIC_Val()*(900/1024)+100;
-        I2C_Init(potVal);
-        if(BTN_GetValue('R')){
-            delay_ms(1000);
-            if(axisState == YZ)
-                axisState = XY;
-            else
-                axisState++;
+        if (BTN_GetValue('C') && !buttonLock) { //If BTNC is pressed stop timer and shifting
+            delay_ms(50);
+            buttonLock = 1;
+        } 
+        else if (BTN_GetValue('L') && !buttonLock) {//If BTNL shift mode to left
+            delay_ms(50);
+            if(position == XY){
+                position = YZ;
+            }
+            else{
+                position--;
+            }
+            buttonLock = 1;
+        } 
+        else if (BTN_GetValue('R') && !buttonLock) {//If BTNR shift mode to right
+            delay_ms(50);
+            if(position == YZ){
+                position = XY;
+            }
+            else{
+                position++;
+            }
+            buttonLock = 1;
+        } 
+        else if (BTN_GetValue('U') && !buttonLock) {//If BTNU set counter to count up
+            delay_ms(50);
+            //do stuff
+            buttonLock = 1;
+        } 
+        else if (BTN_GetValue('D') && !buttonLock) {//If BTND reset counter to 0sec
+            delay_ms(50);
+            //do stuff
+            buttonLock = 1;
         }
-        else if(BTN_GetValue('L')){
-            delay_ms(1000);
-            if(axisState == XY)
-                axisState = YZ;
-            else
-                axisState--;
+        if (buttonLock && !BTN_GetValue('C') && !BTN_GetValue('L') && !BTN_GetValue('R')
+                && !BTN_GetValue('U') && !BTN_GetValue('D')) {
+            delay_ms(50);
+            buttonLock = 0;
         }
-
-        if(BTN_GetValue('U')){
-            ACL_ReadRawValues(accelData);
+        
+        if(xVal < 0){
+            xPrecision = 2;
         }
-
-        switch(axisState){
-            case XY: sprintf(coords, "X:%.3f Y:%.3f", accelX, accelY);
-            break;
-            case ZX: sprintf(coords, "Z:%.3f X: %.3f", accelZ, accelX);
-            break;
-            case YZ: sprintf(coords, "Y:%.3f Z: %.3f", accelY, accelZ);
-            break;
+        else{
+            xPrecision = 3;
         }
-        LCD_WriteStringAtPos(coords,1,0);
+        if(yVal < 0){
+            yPrecision = 2;
+        }
+        else{
+            yPrecision = 3;
+        }
+        if(zVal < 0){
+            zPrecision = 2;
+        }
+        else{
+            zPrecision = 3;
+        }
+        
+        switch(position){
+            case XY:
+                sprintf(accelDisplay,"X:%.*f", xPrecision, xVal);//sprintf(accelDisplay,"X:%.3f Y:%.3f", xVal, yVal);
+                break;
+            case ZX:    
+                sprintf(accelDisplay,"Z:%.*f X:%.*f", zVal, xVal, zPrecision, xPrecision);
+                break;
+            case YZ:    
+                sprintf(accelDisplay,"Y:%.*f Z:%.*f", yVal, zVal, yPrecision, zPrecision);
+                break;
+        }
+        
+        LCD_WriteStringAtPos(accelDisplay, 1,0);
     }
-    
-    
 }
 
-void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
+/*void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
     mCTClearIntFlag();
     
     UpdateCoreTimer(CORE_TICK_RATE);
+}*/
+
+void update_SSD(int value) {
+    int hunds, tens, ones, tenths;
+    char SSD1 = 0b0000000; //SSD setting for 1st SSD (LSD)
+    char SSD2 = 0b0000000; //SSD setting for 2nd SSD
+    char SSD3 = 0b0000000; //SSD setting for 3rd SSD 
+    char SSD4 = 0b0000000; //SSD setting for 4th SSD (MSD)
+    hunds = floor(value / 1000);
+    if (hunds > 0)
+        SSD4 = hunds; //SSD4 = display_char[thous];
+    else
+        SSD4 = 17; //blank display
+    tens = floor((value % 1000) / 100);
+    if (hunds == 0 && tens == 0)
+        SSD3 = 17; //blank display
+    else
+        SSD3 = tens;
+    SSD2 = ones = floor(value % 100 / 10);
+    SSD1 = tenths = floor(value % 10);
+    SSD_WriteDigits(SSD1, SSD2, SSD3, SSD4, 0, 1, 0, 0);
 }
 
 void delay_ms(int ms) {

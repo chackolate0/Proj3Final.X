@@ -16,6 +16,7 @@
       <itemPath>uart.h</itemPath>
       <itemPath>utils.h</itemPath>
       <itemPath>../../../../Program Files (x86)/Microchip/xc32/v2.10/pic32mx/include/xc.h</itemPath>
+      <itemPath>rgbled.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -35,6 +36,7 @@
       <itemPath>swt.c</itemPath>
       <itemPath>uart.c</itemPath>
       <itemPath>utils.c</itemPath>
+      <itemPath>rgbled.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -215,6 +217,9 @@
         <property key="save-temps" value="false"/>
         <property key="wpo-lto" value="false"/>
       </C32Global>
+      <PK3OBPlatformTool>
+        <property key="firmware.download.all" value="false"/>
+      </PK3OBPlatformTool>
     </conf>
   </confs>
 </configurationDescriptor>
