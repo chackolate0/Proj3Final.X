@@ -96,6 +96,7 @@ int position = XY;
 int buttonLock = 0;
 
 char accelDisplay[80];
+char sensitivityDisplay[80] = "Team 1: SENS: 2G";
 float xVal = 1.303;
 float yVal = -4.70;
 float zVal = 0.132; 
@@ -103,17 +104,34 @@ int xPrecision;
 int yPrecision;
 int zPrecision;
 
+int sensitivity = 2;
+
+short int xshorVal;
+short int yshorVal;
+short int zshorVal;
+
+int potVal;
+int sampleRate;
+
 int main(void){
     BTN_Init();
     //RGBLED_Init();
     ADC_Init();
     LCD_Init();
     SSD_Init();
+    ACL_Init();
     
-    LCD_WriteStringAtPos("Team: 1 SENS: 2G",0,0);
+    INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR); 
+    OpenCoreTimer(CORE_TICK_RATE); //CoreTimer used for tenths of second capture  
+    mConfigIntCoreTimer((CT_INT_ON | CT_INT_PRIOR_5 | CT_INT_SUB_PRIOR_0));
+    INTEnableSystemMultiVectoredInt();  //Enable Timer interrupts
+    
     update_SSD(0);
-    
+    LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
     while(1){
+        potVal = ADC_AnalogRead(2);
+        sampleRate = (potVal * (10 - 1)) / 1023 + 1;
+        
         if (BTN_GetValue('C') && !buttonLock) { //If BTNC is pressed stop timer and shifting
             delay_ms(50);
             buttonLock = 1;
@@ -140,12 +158,16 @@ int main(void){
         } 
         else if (BTN_GetValue('U') && !buttonLock) {//If BTNU set counter to count up
             delay_ms(50);
-            //do stuff
+            if(sensitivity < 8){
+                sensitivity*=2;
+            } 
             buttonLock = 1;
         } 
         else if (BTN_GetValue('D') && !buttonLock) {//If BTND reset counter to 0sec
             delay_ms(50);
-            //do stuff
+            if(sensitivity > 2){
+                sensitivity /= 2;
+            }
             buttonLock = 1;
         }
         if (buttonLock && !BTN_GetValue('C') && !BTN_GetValue('L') && !BTN_GetValue('R')
@@ -155,65 +177,97 @@ int main(void){
         }
         
         if(xVal < 0){
-            xPrecision = 2;
+            xPrecision = 1;
         }
         else{
-            xPrecision = 3;
+            xPrecision = 10;
         }
         if(yVal < 0){
-            yPrecision = 2;
+            yPrecision = 1;
         }
         else{
-            yPrecision = 3;
+            yPrecision = 10;
         }
         if(zVal < 0){
-            zPrecision = 2;
+            zPrecision = 1;
         }
         else{
-            zPrecision = 3;
+            zPrecision = 10;
         }
         
         switch(position){
             case XY:
-                sprintf(accelDisplay,"X:%.*f", xPrecision, xVal);//sprintf(accelDisplay,"X:%.3f Y:%.3f", xVal, yVal);
+                sprintf(accelDisplay,"X:%.3f Y:%.3f", xVal, yVal);//sprintf(accelDisplay,"X:%.3f Y:%.3f", xVal, yVal);
+                update_SSD((int)(zVal*100 * zPrecision));
                 break;
             case ZX:    
-                sprintf(accelDisplay,"Z:%.*f X:%.*f", zVal, xVal, zPrecision, xPrecision);
+                sprintf(accelDisplay,"Z:%.3f X:%.3f", zVal, xVal);
+                update_SSD((int)(yVal*100 * yPrecision));
                 break;
             case YZ:    
-                sprintf(accelDisplay,"Y:%.*f Z:%.*f", yVal, zVal, yPrecision, zPrecision);
+                sprintf(accelDisplay,"Y:%.3f Z:%.3f", yVal, zVal);
+                update_SSD((int)(xVal*100 * xPrecision));
                 break;
         }
-        
+        sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
+        LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
         LCD_WriteStringAtPos(accelDisplay, 1,0);
     }
 }
 
-/*void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
+void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
     mCTClearIntFlag();
-    
-    UpdateCoreTimer(CORE_TICK_RATE);
-}*/
+    //ACL_ReadRawValues(posValues);
+    float xyzGvals[3];
+    ACL_ReadGValues(xyzGvals);
+    /*xshorVal=(((unsigned short)posValues[0]<<4)+((posValues[1])>>4));
+    yshorVal=(((unsigned short)posValues[2]<<4)+((posValues[3])>>4));
+    zshorVal=(((unsigned short)posValues[4]<<4)+((posValues[5])>>4));
+    if(xshorVal & (1<<11)){
+    xshorVal |= 0xF000; //xVal=(short)~(xVal)+1; 
+    }
+    if(yshorVal & (1<<11)){
+    yshorVal |= 0xF000; //yVal=(short)~(yVal)+1;
+    }
+    if(zshorVal & (1<<11)){
+    zshorVal |= 0xF000; //zVal=(short)~(zVal)+1;
+    }*/
+    xVal = xyzGvals[0];
+    yVal = xyzGvals[1];
+    zVal = xyzGvals[2];
+    UpdateCoreTimer(CORE_TICK_RATE* sampleRate);
+}
 
 void update_SSD(int value) {
     int hunds, tens, ones, tenths;
+    int dec1, dec2;
     char SSD1 = 0b0000000; //SSD setting for 1st SSD (LSD)
     char SSD2 = 0b0000000; //SSD setting for 2nd SSD
     char SSD3 = 0b0000000; //SSD setting for 3rd SSD 
     char SSD4 = 0b0000000; //SSD setting for 4th SSD (MSD)
-    hunds = floor(value / 1000);
-    if (hunds > 0)
-        SSD4 = hunds; //SSD4 = display_char[thous];
-    else
-        SSD4 = 17; //blank display
+    if (value < 0){
+        SSD4 = 17;
+        value = -1 * value;
+        dec1 = 0;
+        dec2 = 1;
+    }
+    else{
+        dec1 = 1;
+        dec2 = 0;
+        hunds = floor(value / 1000);
+        if (hunds > 0)
+            SSD4 = hunds; //SSD4 = display_char[thous];
+        else
+            SSD4 = 0;
+    }
     tens = floor((value % 1000) / 100);
     if (hunds == 0 && tens == 0)
-        SSD3 = 17; //blank display
+        SSD3 = 0;
     else
         SSD3 = tens;
     SSD2 = ones = floor(value % 100 / 10);
     SSD1 = tenths = floor(value % 10);
-    SSD_WriteDigits(SSD1, SSD2, SSD3, SSD4, 0, 1, 0, 0);
+    SSD_WriteDigits(SSD1, SSD2, SSD3, SSD4, 0, 0, dec2, dec1);
 }
 
 void delay_ms(int ms) {

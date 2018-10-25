@@ -59,7 +59,8 @@ const unsigned char digitSegments[]= {
     0b0100001, // d
     0b0000110, // E
     0b0001110,  // F
-    0b0001001   // H
+    0b0001001,   // H
+    0b0111111 //-
 };
 
 #define NO_DIGITS sizeof(digitSegments)/sizeof(digitSegments[0])
