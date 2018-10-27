@@ -96,7 +96,7 @@ int position = XY;
 int buttonLock = 0;
 
 char accelDisplay[80];
-char sensitivityDisplay[80] = "Team 1: SENS: 2G";
+char sensitivityDisplay[80];
 float xVal = 1.303;
 float yVal = -4.70;
 float zVal = 0.132; 
@@ -115,7 +115,7 @@ int sampleRate;
 
 int main(void){
     BTN_Init();
-    //RGBLED_Init();
+    RGBLED_Init();
     ADC_Init();
     LCD_Init();
     SSD_Init();
@@ -236,6 +236,15 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
     yVal = xyzGvals[1];
     zVal = xyzGvals[2];
     UpdateCoreTimer(CORE_TICK_RATE* sampleRate);
+    if (xVal>yVal && xVal>zVal){
+        RGBLED_SetValue(255,0,0);
+    }
+    else if (yVal>xVal && yVal>zVal){
+        RGBLED_SetValue(0,255,0);
+    }
+    else if (zVal>xVal && zVal>yVal){
+        RGBLED_SetValue(0,0,255);
+    }
 }
 
 void update_SSD(int value) {
