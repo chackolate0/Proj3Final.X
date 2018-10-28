@@ -96,7 +96,7 @@ int position = XY;
 int buttonLock = 0;
 
 char accelDisplay[80];
-char sensitivityDisplay[80] = "Team: 1 SENS: 2G";
+char sensitivityDisplay[80];
 float xVal = 1.303;
 float yVal = -4.70;
 float zVal = 0.132; 
@@ -117,12 +117,9 @@ int main(void){
     BTN_Init();
     RGBLED_Init();
     ADC_Init();
-    LED_Init();
     LCD_Init();
     SSD_Init();
-    SWT_Init();
     ACL_Init();
-    
     
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR); 
     OpenCoreTimer(CORE_TICK_RATE); //CoreTimer used for tenths of second capture  
@@ -215,11 +212,6 @@ int main(void){
         sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
         LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
         LCD_WriteStringAtPos(accelDisplay, 1,0);
-        
-        LED_SetValue(1,SWT_GetValue(1));
-        LED_SetValue(2,SWT_GetValue(2));
-        LED_SetValue(6,SWT_GetValue(6));
-        LED_SetValue(7,SWT_GetValue(7));
     }
 }
 
