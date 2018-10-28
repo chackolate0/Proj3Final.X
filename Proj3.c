@@ -132,7 +132,8 @@ int flashes = 0;
 char rawVals[6];
 
 //variables for uart
-char
+char uartMsg[80];
+int uartCount = 0;
 
 int main(void)
 {
@@ -143,6 +144,9 @@ int main(void)
     LCD_Init();
     SSD_Init();
     ACL_Init();
+    SWT_Init();
+    UART_Init(9600);
+    SPIFLASH_Init();
 
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
     OpenCoreTimer(CORE_TICK_RATE); //CoreTimer used for tenths of second capture
@@ -275,8 +279,7 @@ int main(void)
             if(flashes == 0){
                 flashes++;
                 LCD_WriteStringAtPos("Erasing Flash", 0, 0);
-                //SPIFLASH_EraseAll();
-                delay_ms(100);
+                SPIFLASH_EraseAll();
             }
             else if(flashes<31){
                 int i=0;
@@ -284,11 +287,10 @@ int main(void)
                 delay_ms(500);
                 for(i = 0; i < 6; i++){
                     xyzSPIVals[6*(flashes-1)+i] = rawVals[i];
-                    counter++;
+                    flashes++;
                     //SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
 
                 }
-                flashes++;
                 reading = 0;
             }
             else if(flashes==31){
@@ -298,10 +300,11 @@ int main(void)
             }
                         
         }
-
-
+        uartCount=0;
         while(SWT_GetValue(6)){
-            sprintf(strMsg)
+        sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r",uartCount,xVal,yVal,zVal); 
+        UART_PutString(uartMsg);
+        uartCount++;
         }
 
         sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
