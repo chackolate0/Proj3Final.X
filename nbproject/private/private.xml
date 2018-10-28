@@ -4,10 +4,10 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/Alex/MPLABXProjects/Proj3Final.X/uart.c</file>
+            <file>file:/C:/Users/Alex/MPLABXProjects/Proj3Final.X/spiflash.c</file>
             <file>file:/C:/Users/Alex/MPLABXProjects/Proj3Final.X/Proj3.c</file>
             <file>file:/C:/Users/Alex/MPLABXProjects/Proj3Final.X/swt.c</file>
             <file>file:/C:/Users/Alex/MPLABXProjects/Proj3Final.X/rgbled.c</file>
-            <file>file:/C:/Users/Alex/MPLABXProjects/Proj3Final.X/led.c</file>
         </group>
     </open-files>
 </project-private>
