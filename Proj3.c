@@ -115,7 +115,7 @@ int sampleRate;
 
 int main(void){
     BTN_Init();
-    //RGBLED_Init();
+    RGBLED_Init();
     ADC_Init();
     LCD_Init();
     SSD_Init();
@@ -215,26 +215,43 @@ int main(void){
     }
 }
 
+// void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
+//     mCTClearIntFlag();
+//     //ACL_ReadRawValues(posValues);
+//     float xyzGvals[3];
+//     ACL_ReadGValues(xyzGvals);
+//     /*xshorVal=(((unsigned short)posValues[0]<<4)+((posValues[1])>>4));
+//     yshorVal=(((unsigned short)posValues[2]<<4)+((posValues[3])>>4));
+//     zshorVal=(((unsigned short)posValues[4]<<4)+((posValues[5])>>4));
+//     if(xshorVal & (1<<11)){
+//     xshorVal |= 0xF000; //xVal=(short)~(xVal)+1; 
+//     }
+//     if(yshorVal & (1<<11)){
+//     yshorVal |= 0xF000; //yVal=(short)~(yVal)+1;
+//     }
+//     if(zshorVal & (1<<11)){
+//     zshorVal |= 0xF000; //zVal=(short)~(zVal)+1;
+//     }*/
+//     xVal = xyzGvals[0];
+//     yVal = xyzGvals[1];
+//     zVal = xyzGvals[2];
+//     UpdateCoreTimer(CORE_TICK_RATE* sampleRate);
+// }
+
 void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
     mCTClearIntFlag();
-    //ACL_ReadRawValues(posValues);
     float xyzGvals[3];
     ACL_ReadGValues(xyzGvals);
-    /*xshorVal=(((unsigned short)posValues[0]<<4)+((posValues[1])>>4));
-    yshorVal=(((unsigned short)posValues[2]<<4)+((posValues[3])>>4));
-    zshorVal=(((unsigned short)posValues[4]<<4)+((posValues[5])>>4));
-    if(xshorVal & (1<<11)){
-    xshorVal |= 0xF000; //xVal=(short)~(xVal)+1; 
-    }
-    if(yshorVal & (1<<11)){
-    yshorVal |= 0xF000; //yVal=(short)~(yVal)+1;
-    }
-    if(zshorVal & (1<<11)){
-    zshorVal |= 0xF000; //zVal=(short)~(zVal)+1;
-    }*/
     xVal = xyzGvals[0];
     yVal = xyzGvals[1];
     zVal = xyzGvals[2];
+
+    if(xVal>yVal && xVal>zVal)
+        RGBLED_SetValue(255,0,0);
+    else if(yVal>xVal  && yVal>zVal)
+        RGBLED_SetValue(0,255,0);
+    else if(zVal>xVal && zVal>yVal)
+        RGBLED_SetValue(0,0,255);
     UpdateCoreTimer(CORE_TICK_RATE* sampleRate);
 }
 
