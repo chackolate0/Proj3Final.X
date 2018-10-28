@@ -126,6 +126,7 @@ char xyzSPIVals[180];
 char reading = 0;
 int counter = 0;
 int flashes = 0;
+char rawVals[6];
 
 int main(void)
 {
@@ -186,6 +187,7 @@ int main(void)
             if (sensitivity < 8)
             {
                 sensitivity *= 2;
+                delay_ms(100);
                 switch(sensitivity){
                     case 2:
                         ACL_SetRange(0);
@@ -204,6 +206,7 @@ int main(void)
             if (sensitivity > 2)
             {
                 sensitivity /= 2;
+                delay_ms(100);
                 switch(sensitivity){
                     case 2:
                         ACL_SetRange(0);
@@ -273,10 +276,20 @@ int main(void)
                 SPIFLASH_EraseAll();
                 flashes++;
             }
-            else if (flashes < 31)
+            else if (flashes <= 30)
             {
-
+                int i=0;
+                LCD_WriteStringAtPos("Writing to Flash",0,0);
+                delay_ms(1000);
+                for(i = 0, i < 6, i++){
+                    xyzSPIVals[6*flashes+i] = rawVals[i];
+                    counter++;
+                }
+                flashes++;
+                reading = 0;
             }
+            SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
+            SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals)
         }
     }
 }
@@ -306,6 +319,7 @@ int main(void)
 
 void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void)
 {
+    ACL_ReadRawValues(rawVals);
     mCTClearIntFlag();
     float xyzGvals[3];
     ACL_ReadGValues(xyzGvals);
