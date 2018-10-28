@@ -84,6 +84,7 @@
 #include "uart.h"
 #include <math.h>
 #include "rgbled.h"
+#include "led.h"
 
 /* TODO:  Include other files here if needed. */
 #define SYS_FREQ (80000000L)
@@ -122,11 +123,16 @@ short int zshorVal;
 int potVal;
 int sampleRate;
 
+//variables for spi
 char xyzSPIVals[180];
+char xyzSPIOut[180];
 char reading = 0;
 int counter = 0;
 int flashes = 0;
 char rawVals[6];
+
+//variables for uart
+char
 
 int main(void)
 {
@@ -264,33 +270,49 @@ int main(void)
             update_SSD((int)(xVal * 100 * xPrecision));
             break;
         }
-        sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
-        LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
-        LCD_WriteStringAtPos(accelDisplay, 1, 0);
 
-        if (reading && counter < 180)
-        {
-            if (flashes = 0)
-            {
-                LCD_WriteStringAtPos("Erasing Flash", 0, 0);
-                SPIFLASH_EraseAll();
+        if(reading == 1 && counter<180){
+            if(flashes == 0){
                 flashes++;
+                LCD_WriteStringAtPos("Erasing Flash", 0, 0);
+                //SPIFLASH_EraseAll();
+                delay_ms(100);
             }
-            else if (flashes <= 30)
-            {
+            else if(flashes<31){
                 int i=0;
                 LCD_WriteStringAtPos("Writing to Flash",0,0);
-                delay_ms(1000);
-                for(i = 0, i < 6, i++){
-                    xyzSPIVals[6*flashes+i] = rawVals[i];
+                delay_ms(500);
+                for(i = 0; i < 6; i++){
+                    xyzSPIVals[6*(flashes-1)+i] = rawVals[i];
                     counter++;
+                    //SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
+
                 }
                 flashes++;
                 reading = 0;
             }
-            SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
-            SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals)
+            else if(flashes==31){
+                SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
+                LCD_WriteStringAtPos("Written to Flash",0,0);
+                delay_ms(1500);
+            }
+                        
         }
+
+
+        while(SWT_GetValue(6)){
+            sprintf(strMsg)
+        }
+
+        sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
+        LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
+        LCD_WriteStringAtPos(accelDisplay, 1, 0);
+
+        LED_SetValue(1,SWT_GetValue(1));
+        LED_SetValue(2,SWT_GetValue(2));
+        LED_SetValue(6,SWT_GetValue(6));
+        LED_SetValue(7,SWT_GetValue(7));
+        
     }
 }
 
@@ -337,7 +359,11 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void)
     if (SWT_GetValue(1) && !SWT_GetValue(2) && reading == 0)
     {
         reading = 1;
+        flashes = 0;
     }
+    // else if(SWT_GetValue(2) && !SWT_GetValue(1) && reading == 0){
+    //     reading = 1;
+    // }
 
     UpdateCoreTimer(CORE_TICK_RATE * sampleRate);
 }
