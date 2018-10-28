@@ -18,6 +18,7 @@
       <itemPath>../../../../Program Files (x86)/Microchip/xc32/v2.10/pic32mx/include/xc.h</itemPath>
       <itemPath>rgbled.h</itemPath>
       <itemPath>led.h</itemPath>
+      <itemPath>spiflash.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -39,6 +40,7 @@
       <itemPath>utils.c</itemPath>
       <itemPath>rgbled.c</itemPath>
       <itemPath>led.c</itemPath>
+      <itemPath>spiflash.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

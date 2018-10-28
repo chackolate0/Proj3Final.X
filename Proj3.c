@@ -90,6 +90,11 @@
 #define INTSEC 10
 #define CORE_TICK_RATE (SYS_FREQ/2/INTSEC)
 
+#define NUMBER_DATA_POINTS 30
+#define SPIFLASH_PROG_ADDR 0x100
+#define SPIFLASH_PROG_SIZE  3*NUMBER_DATA_POINTS*sizeof(signed short int)
+
+
 int potVal;
 enum displayState {XY, ZX, YZ};
 int position = XY;
@@ -113,9 +118,13 @@ short int zshorVal;
 int potVal;
 int sampleRate;
 
+char xyzSPIVals[180];
+char reading = 0;
+
 int main(void){
     BTN_Init();
-    RGBLED_Init();
+    //RGBLED_Init();
+    LED_Init();
     ADC_Init();
     LCD_Init();
     SSD_Init();
@@ -252,6 +261,14 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
         RGBLED_SetValue(0,255,0);
     else if(zVal>xVal && zVal>yVal)
         RGBLED_SetValue(0,0,255);
+    
+    if(SWT_GetValue(1)){
+        
+        SPIFLASH_EraseAll();
+        SPIFLASH_Read(SPIFLASH_PROG_ADDR,)
+        SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIVals,SPIFLASH_PROG_SIZE);
+    }
+    
     UpdateCoreTimer(CORE_TICK_RATE* sampleRate);
 }
 
