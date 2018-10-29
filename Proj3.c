@@ -198,15 +198,15 @@ int main(void)
             {
                 sensitivity *= 2;
                 delay_ms(100);
-                switch(sensitivity){
-                    case 2:
-                        ACL_SetRange(0);
-                    case 4:
-                        ACL_SetRange(1);
-                    case 8:
-                        ACL_SetRange(2);
+                switch (sensitivity)
+                {
+                case 2:
+                    ACL_SetRange(0);
+                case 4:
+                    ACL_SetRange(1);
+                case 8:
+                    ACL_SetRange(2);
                 }
-                
             }
             buttonLock = 1;
         }
@@ -217,13 +217,14 @@ int main(void)
             {
                 sensitivity /= 2;
                 delay_ms(100);
-                switch(sensitivity){
-                    case 2:
-                        ACL_SetRange(0);
-                    case 4:
-                        ACL_SetRange(1);
-                    case 8:
-                        ACL_SetRange(2);
+                switch (sensitivity)
+                {
+                case 2:
+                    ACL_SetRange(0);
+                case 4:
+                    ACL_SetRange(1);
+                case 8:
+                    ACL_SetRange(2);
                 }
             }
             buttonLock = 1;
@@ -275,48 +276,51 @@ int main(void)
             break;
         }
 
-        if(reading == 1 && counter<180){
-            if(flashes == 0){
+        if (reading == 1 && counter < 180)
+        {
+            if (flashes == 0)
+            {
                 flashes++;
                 LCD_WriteStringAtPos("Erasing Flash", 0, 0);
                 SPIFLASH_EraseAll();
             }
-            else if(flashes<31){
-                int i=0;
-                LCD_WriteStringAtPos("Writing to Flash",0,0);
+            else if (flashes < 31)
+            {
+                int i = 0;
+                LCD_WriteStringAtPos("Writing to Flash", 0, 0);
                 delay_ms(500);
-                for(i = 0; i < 6; i++){
-                    xyzSPIVals[6*(flashes-1)+i] = rawVals[i];
+                for (i = 0; i < 6; i++)
+                {
+                    xyzSPIVals[6 * (flashes - 1) + i] = rawVals[i];
                     SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
-
                 }
                 flashes++;
                 reading = 0;
             }
-            else if(flashes==31){
+            else if (flashes == 31)
+            {
                 SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
-                LCD_WriteStringAtPos("Written to Flash",0,0);
+                LCD_WriteStringAtPos("Written to Flash", 0, 0);
                 reading = 0;
                 delay_ms(1500);
             }
-                        
         }
-        uartCount=0;
-        while(SWT_GetValue(6)){
-        sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r",uartCount,xVal,yVal,zVal); 
-        UART_PutString(uartMsg);
-        uartCount++;
+        uartCount = 0;
+        while (SWT_GetValue(6))
+        {
+            sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, xVal, yVal, zVal);
+            UART_PutString(uartMsg);
+            uartCount++;
         }
 
         sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
         LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
         LCD_WriteStringAtPos(accelDisplay, 1, 0);
 
-        LED_SetValue(1,SWT_GetValue(1));
-        LED_SetValue(2,SWT_GetValue(2));
-        LED_SetValue(6,SWT_GetValue(6));
-        LED_SetValue(7,SWT_GetValue(7));
-        
+        LED_SetValue(1, SWT_GetValue(1));
+        LED_SetValue(2, SWT_GetValue(2));
+        LED_SetValue(6, SWT_GetValue(6));
+        LED_SetValue(7, SWT_GetValue(7));
     }
 }
 
@@ -364,12 +368,13 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void)
     {
         reading = 1;
     }
-    else if (!SWT_GetValue(1) && reading == 0){
-        
+    else if (!SWT_GetValue(1) && reading == 0)
+    {
     }
-    // else if(SWT_GetValue(2) && !SWT_GetValue(1) && reading == 0){
-    //     reading = 1;
-    // }
+    else if (SWT_GetValue(2) && !SWT_GetValue(1) && reading == 0)
+    {
+        reading = 1;
+    }
 
     UpdateCoreTimer(CORE_TICK_RATE * sampleRate);
 }
