@@ -131,8 +131,8 @@ int counter = 0;
 int flashes = 0;
 char rawVals[6];
 
-////variables for uart
-//char
+//variables for uart
+char
 
 int main(void)
 {
@@ -300,9 +300,9 @@ int main(void)
         }
 
 
-//        while(SWT_GetValue(6)){
-//            sprintf(strMsg)
-//        }
+        while(SWT_GetValue(6)){
+            sprintf(strMsg)
+        }
 
         sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
         LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
