@@ -138,7 +138,7 @@ int uartCount = 0;
 int main(void)
 {
     BTN_Init();
-    //RGBLED_Init();
+    RGBLED_Init();
     LED_Init();
     ADC_Init();
     LCD_Init();
@@ -262,7 +262,7 @@ int main(void)
         switch (position)
         {
         case XY:
-            sprintf(accelDisplay, "X:%.3f Y:%.3f", xVal, yVal); //sprintf(accelDisplay,"X:%.3f Y:%.3f", xVal, yVal);
+            sprintf(accelDisplay, "X:%.3f Y:%.3f", xVal, yVal);
             update_SSD((int)(zVal * 100 * zPrecision));
             break;
         case ZX:
@@ -287,15 +287,16 @@ int main(void)
                 delay_ms(500);
                 for(i = 0; i < 6; i++){
                     xyzSPIVals[6*(flashes-1)+i] = rawVals[i];
-                    flashes++;
-                    //SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
+                    SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
 
                 }
+                flashes++;
                 reading = 0;
             }
             else if(flashes==31){
                 SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
                 LCD_WriteStringAtPos("Written to Flash",0,0);
+                reading = 0;
                 delay_ms(1500);
             }
                         
@@ -362,7 +363,9 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void)
     if (SWT_GetValue(1) && !SWT_GetValue(2) && reading == 0)
     {
         reading = 1;
-        flashes = 0;
+    }
+    else if (!SWT_GetValue(1) && reading == 0){
+        
     }
     // else if(SWT_GetValue(2) && !SWT_GetValue(1) && reading == 0){
     //     reading = 1;
