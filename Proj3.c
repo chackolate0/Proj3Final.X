@@ -321,7 +321,7 @@ int main(void)
             unsigned char yVal[2];
             unsigned char zVal[2];
             SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
-            
+
             for (i = 0; i < 180; i = i + 6)
             {
                 xVal[0] = xyzSPIVals[i];
@@ -335,7 +335,8 @@ int main(void)
                 xyzSPIOut[(i / 2) + 2] = ACL_ConvertRawToValueG(zVal);
             }
 
-            while(sw2==1){
+            while (sw2 == 1)
+            {
                 if (BTN_GetValue('U') && !btnLock)
                 { //If BTNU set counter to count up
                     delay_ms(50);
@@ -380,47 +381,52 @@ int main(void)
                     }
                     btnLock = 1;
                 }
-                sprintf(disp2, "Team: 1 SET: %d ",(data/3)+1);
-                LCD_WriteStringAtPos(disp2,0,0);
-                    if(xyzSPIOut[data]<0){
-                        xPrecision = 1;
-                    }
-                    else{
-                        xPrecision = 10;
-                    }
-                    if(xyzSPIOut[data+1]<0){
-                        yPrecision = 1;
-                    }
-                    else{
-                        yPrecision = 10;
-                    }
-                    if(xyzSPIOut[data+2]<0){
-                        zPrecision = 1;
-                    }
-                    else{
-                        zPrecision = 10;
-                    }
-                    
-                    switch (position)
-                    {
-                    case XY:
-                        sprintf(accelDisplay, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data+1]);
-                        LCD_WriteStringAtPos(accelDisplay,1,0);
-                        update_SSD((int)(zVal[data+2] * 100 * zPrecision));
-                        break;
-                    case ZX:
-                        sprintf(accelDisplay, "Z:%.3f X:%.3f", xyzSPIOut[data+2], xyzSPIOut[data]);
-                        LCD_WriteStringAtPos(accelDisplay,1,0);
-                        update_SSD((int)(yVal[data+1] * 100 * yPrecision));
-                        break;
-                    case YZ:
-                        sprintf(accelDisplay, "Y:%.3f Z:%.3f", xyzSPIOut[data+1], xyzSPIOut[data+2]);
-                        LCD_WriteStringAtPos(accelDisplay,1,0);
-                        update_SSD((int)(xVal[data] * 100 * xPrecision));
-                        break;
-                    }
-                }            
-            
+                sprintf(disp2, "Team: 1 SET: %d ", (data / 3) + 1);
+                LCD_WriteStringAtPos(disp2, 0, 0);
+                if (xyzSPIOut[data] < 0)
+                {
+                    xPrecision = 1;
+                }
+                else
+                {
+                    xPrecision = 10;
+                }
+                if (xyzSPIOut[data + 1] < 0)
+                {
+                    yPrecision = 1;
+                }
+                else
+                {
+                    yPrecision = 10;
+                }
+                if (xyzSPIOut[data + 2] < 0)
+                {
+                    zPrecision = 1;
+                }
+                else
+                {
+                    zPrecision = 10;
+                }
+
+                switch (position)
+                {
+                case XY:
+                    sprintf(accelDisplay, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data + 1]);
+                    LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                    update_SSD((int)(zVal[data + 2] * 100 * zPrecision));
+                    break;
+                case ZX:
+                    sprintf(accelDisplay, "Z:%.3f X:%.3f", xyzSPIOut[data + 2], xyzSPIOut[data]);
+                    LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                    update_SSD((int)(yVal[data + 1] * 100 * yPrecision));
+                    break;
+                case YZ:
+                    sprintf(accelDisplay, "Y:%.3f Z:%.3f", xyzSPIOut[data + 1], xyzSPIOut[data + 2]);
+                    LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                    update_SSD((int)(xVal[data] * 100 * xPrecision));
+                    break;
+                }
+            }
         }
 
         while (SWT_GetValue(6))
