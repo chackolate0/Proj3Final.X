@@ -123,13 +123,16 @@ short int zshorVal;
 int potVal;
 int sampleRate;
 
-//variables for spi
+//variables for sw1
 char xyzSPIVals[180];
 char xyzSPIOut[180];
 char reading = 0;
 int counter = 0;
 int flashes = 0;
 char rawVals[6];
+
+//variables for sw2
+char sw2 = 0;
 
 //variables for uart
 char uartMsg[80];
@@ -276,11 +279,12 @@ int main(void)
             break;
         }
 
-        if (reading == 1 && counter < 180)
+        //SW1 Controls
+        if (reading == 1 && counter <= 180)
         {
             if (flashes == 0)
             {
-                flashes=1;
+                flashes++;
                 LCD_WriteStringAtPos("Erasing Flash", 0, 0);
                 SPIFLASH_EraseAll();
             }
@@ -292,21 +296,25 @@ int main(void)
                 for (i = 0; i < 6; i++)
                 {
                     xyzSPIVals[6 * (flashes - 1) + i] = rawVals[i];
-                    SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
                     counter++;
                 }
                 flashes++;
-                reading = 0;
             }
             else if (counter == 180)
             {
-                SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
+                SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
                 LCD_WriteStringAtPos("Written to Flash", 0, 0);
-                flashes = -1;
-                reading = 0;
+                delay_ms(5000);
             }
         }
         uartCount = 0;
+
+        //SW2 Controls
+        if(sw2 == 1){
+            SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
+            update_SSD();
+        }
+
         while (SWT_GetValue(6))
         {
             sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, xVal, yVal, zVal);
@@ -368,14 +376,16 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void)
     if (SWT_GetValue(1) && !SWT_GetValue(2) && reading == 0)
     {
         reading = 1;
+    }
+    if (SWT_GetValue(1)==0 && reading == 1)
+    {
         flashes = 0;
+        counter = 0;
+        reading = 0;
     }
-    else if (!SWT_GetValue(1) && reading == 0)
+    if (SWT_GetValue(2) && !SWT_GetValue(1) && sw2 == 0)
     {
-    }
-    else if (SWT_GetValue(2) && !SWT_GetValue(1) && reading == 0)
-    {
-        reading = 1;
+        sw2 = 1;
     }
 
     UpdateCoreTimer(CORE_TICK_RATE * sampleRate);
