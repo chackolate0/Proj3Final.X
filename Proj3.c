@@ -280,7 +280,7 @@ int main(void)
         {
             if (flashes == 0)
             {
-                flashes++;
+                flashes=1;
                 LCD_WriteStringAtPos("Erasing Flash", 0, 0);
                 SPIFLASH_EraseAll();
             }
@@ -293,16 +293,17 @@ int main(void)
                 {
                     xyzSPIVals[6 * (flashes - 1) + i] = rawVals[i];
                     SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
+                    counter++;
                 }
                 flashes++;
                 reading = 0;
             }
-            else if (flashes == 31)
+            else if (counter == 180)
             {
                 SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
                 LCD_WriteStringAtPos("Written to Flash", 0, 0);
+                flashes = -1;
                 reading = 0;
-                delay_ms(1500);
             }
         }
         uartCount = 0;
@@ -367,6 +368,7 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void)
     if (SWT_GetValue(1) && !SWT_GetValue(2) && reading == 0)
     {
         reading = 1;
+        flashes = 0;
     }
     else if (!SWT_GetValue(1) && reading == 0)
     {
