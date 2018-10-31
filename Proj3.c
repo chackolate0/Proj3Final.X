@@ -105,14 +105,14 @@ enum displayState {
 int position = XY;
 int buttonLock = 0;
 
-char accelDisplay[80];
+char aclDisp[80];
 char sensitivityDisplay[80] = "Team 1: SENS: 2G";
 float xVal = 1.303;
 float yVal = -4.70;
 float zVal = 0.132;
-int xPrecision;
-int yPrecision;
-int zPrecision;
+int xPrec;
+int yPrec;
+int zPrec;
 
 int sensitivity = 2;
 
@@ -221,33 +221,33 @@ int main(void) {
         }
 
         if (xVal < 0) {
-            xPrecision = 1;
+            xPrec = 1;
         } else {
-            xPrecision = 10;
+            xPrec = 10;
         }
         if (yVal < 0) {
-            yPrecision = 1;
+            yPrec = 1;
         } else {
-            yPrecision = 10;
+            yPrec = 10;
         }
         if (zVal < 0) {
-            zPrecision = 1;
+            zPrec = 1;
         } else {
-            zPrecision = 10;
+            zPrec = 10;
         }
 
         switch (position) {
             case XY:
-                sprintf(accelDisplay, "X:%.3f Y:%.3f", xVal, yVal);
-                update_SSD((int) (zVal * 100 * zPrecision));
+                sprintf(aclDisp, "X:%.3f Y:%.3f", xVal, yVal);
+                update_SSD((int) (zVal * 100 * zPrec));
                 break;
             case ZX:
-                sprintf(accelDisplay, "Z:%.3f X:%.3f", zVal, xVal);
-                update_SSD((int) (yVal * 100 * yPrecision));
+                sprintf(aclDisp, "Z:%.3f X:%.3f", zVal, xVal);
+                update_SSD((int) (yVal * 100 * yPrec));
                 break;
             case YZ:
-                sprintf(accelDisplay, "Y:%.3f Z:%.3f", yVal, zVal);
-                update_SSD((int) (xVal * 100 * xPrecision));
+                sprintf(aclDisp, "Y:%.3f Z:%.3f", yVal, zVal);
+                update_SSD((int) (xVal * 100 * xPrec));
                 break;
         }
 
@@ -330,36 +330,36 @@ int main(void) {
                 sprintf(disp2, "Team: 1 SET: %d ", (data / 3) + 1);
                 LCD_WriteStringAtPos(disp2, 0, 0);
                 if (xyzSPIOut[data] < 0) {
-                    xPrecision = 1;
+                    xPrec = 1;
                 } else {
-                    xPrecision = 10;
+                    xPrec = 10;
                 }
                 if (xyzSPIOut[data + 1] < 0) {
-                    yPrecision = 1;
+                    yPrec = 1;
                 } else {
-                    yPrecision = 10;
+                    yPrec = 10;
                 }
                 if (xyzSPIOut[data + 2] < 0) {
-                    zPrecision = 1;
+                    zPrec = 1;
                 } else {
-                    zPrecision = 10;
+                    zPrec = 10;
                 }
 
                 switch (position) {
                     case XY:
-                        sprintf(accelDisplay, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data + 1]);
-                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                        update_SSD((int) (zVal[data + 2] * 100 * zPrecision));
+                        sprintf(aclDisp, "X:%.3f Y:%.3f", ACL_ConvertRawToValueG(xVal), ACL_ConvertRawToValueG(yVal));
+                        LCD_WriteStringAtPos(aclDisp, 1, 0);
+                        update_SSD((int) (zVal[data + 2] * 100 * zPrec));
                         break;
                     case ZX:
-                        sprintf(accelDisplay, "Z:%.3f X:%.3f", xyzSPIOut[data + 2], xyzSPIOut[data]);
-                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                        update_SSD((int) (yVal[data + 1] * 100 * yPrecision));
+                        sprintf(aclDisp, "Z:%.3f X:%.3f", ACL_ConvertRawToValueG(zVal), ACL_ConvertRawToValueG(xVal));
+                        LCD_WriteStringAtPos(aclDisp, 1, 0);
+                        update_SSD((int) (yVal[data + 1] * 100 * yPrec));
                         break;
                     case YZ:
-                        sprintf(accelDisplay, "Y:%.3f Z:%.3f", xyzSPIOut[data + 1], xyzSPIOut[data + 2]);
-                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                        update_SSD((int) (xVal[data] * 100 * xPrecision));
+                        sprintf(aclDisp, "Y:%.3f Z:%.3f", ACL_ConvertRawToValueG(yVal), ACL_ConvertRawToValueG(zVal));
+                        LCD_WriteStringAtPos(aclDisp, 1, 0);
+                        update_SSD((int) (xVal[data] * 100 * xPrec));
                         break;
                 }
             }
@@ -426,36 +426,36 @@ int main(void) {
                 sprintf(disp2, "Team: 1 SET: %d ", (data / 3) + 1);
                 LCD_WriteStringAtPos(disp2, 0, 0);
                 if (xyzSPIOut[data] < 0) {
-                    xPrecision = 1;
+                    xPrec = 1;
                 } else {
-                    xPrecision = 10;
+                    xPrec = 10;
                 }
                 if (xyzSPIOut[data + 1] < 0) {
-                    yPrecision = 1;
+                    yPrec = 1;
                 } else {
-                    yPrecision = 10;
+                    yPrec = 10;
                 }
                 if (xyzSPIOut[data + 2] < 0) {
-                    zPrecision = 1;
+                    zPrec = 1;
                 } else {
-                    zPrecision = 10;
+                    zPrec = 10;
                 }
 
                 switch (position) {
                     case XY:
-                        sprintf(accelDisplay, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data + 1]);
-                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                        update_SSD((int) (zVal[data + 2] * 100 * zPrecision));
+                        sprintf(aclDisp, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data + 1]);
+                        LCD_WriteStringAtPos(aclDisp, 1, 0);
+                        update_SSD((int) (zVal[data + 2] * 100 * zPrec));
                         break;
                     case ZX:
-                        sprintf(accelDisplay, "Z:%.3f X:%.3f", xyzSPIOut[data + 2], xyzSPIOut[data]);
-                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                        update_SSD((int) (yVal[data + 1] * 100 * yPrecision));
+                        sprintf(aclDisp, "Z:%.3f X:%.3f", xyzSPIOut[data + 2], xyzSPIOut[data]);
+                        LCD_WriteStringAtPos(aclDisp, 1, 0);
+                        update_SSD((int) (yVal[data + 1] * 100 * yPrec));
                         break;
                     case YZ:
-                        sprintf(accelDisplay, "Y:%.3f Z:%.3f", xyzSPIOut[data + 1], xyzSPIOut[data + 2]);
-                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                        update_SSD((int) (xVal[data] * 100 * xPrecision));
+                        sprintf(aclDisp, "Y:%.3f Z:%.3f", xyzSPIOut[data + 1], xyzSPIOut[data + 2]);
+                        LCD_WriteStringAtPos(aclDisp, 1, 0);
+                        update_SSD((int) (xVal[data] * 100 * xPrec));
                         break;
                 }
             sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, xVal, yVal, zVal);
@@ -466,7 +466,7 @@ int main(void) {
 
         sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
         LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
-        LCD_WriteStringAtPos(accelDisplay, 1, 0);
+        LCD_WriteStringAtPos(aclDisp, 1, 0);
 
         LED_SetValue(1, SWT_GetValue(1));
         LED_SetValue(2, SWT_GetValue(2));
@@ -507,11 +507,11 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void) {
     yVal = xyzGvals[1];
     zVal = xyzGvals[2];
 
-    if (xVal > yVal && xVal > zVal)
+    if (fabs(xVal) > fabs(yVal) && fabs(xVal) > fabs(zVal))
         RGBLED_SetValue(255, 0, 0);
-    else if (yVal > xVal && yVal > zVal)
+    else if (fabs(yVal) > fabs(xVal) && fabs(yVal) > fabs(zVal))
         RGBLED_SetValue(0, 255, 0);
-    else if (zVal > xVal && zVal > yVal)
+    else if (fabs(zVal) > fabs(xVal) && fabs(zVal) > fabs(yVal))
         RGBLED_SetValue(0, 0, 255);
 
     if (SWT_GetValue(1) && !SWT_GetValue(2) && reading == 0) {
