@@ -96,8 +96,8 @@
 #define SPIFLASH_PROG_SIZE 3 * NUMBER_DATA_POINTS * sizeof(signed short int)
 
 int potVal;
-enum displayState
-{
+
+enum displayState {
     XY,
     ZX,
     YZ
@@ -139,8 +139,7 @@ unsigned char gVals[80];
 char uartMsg[80];
 int uartCount = 0;
 
-int main(void)
-{
+int main(void) {
     BTN_Init();
     RGBLED_Init();
     LED_Init();
@@ -159,47 +158,32 @@ int main(void)
 
     update_SSD(0);
     LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
-    while (1)
-    {
+    while (1) {
         potVal = ADC_AnalogRead(2);
         sampleRate = (potVal * (10 - 1)) / 1023 + 1;
 
-        if (BTN_GetValue('C') && !buttonLock)
-        { //If BTNC is pressed stop timer and shifting
+        if (BTN_GetValue('C') && !buttonLock) { //If BTNC is pressed stop timer and shifting
             delay_ms(50);
             buttonLock = 1;
-        }
-        else if (BTN_GetValue('L') && !buttonLock)
-        { //If BTNL shift mode to left
+        } else if (BTN_GetValue('L') && !buttonLock) { //If BTNL shift mode to left
             delay_ms(50);
-            if (position == XY)
-            {
+            if (position == XY) {
                 position = YZ;
-            }
-            else
-            {
+            } else {
                 position--;
             }
             buttonLock = 1;
-        }
-        else if (BTN_GetValue('R') && !buttonLock)
-        { //If BTNR shift mode to right
+        } else if (BTN_GetValue('R') && !buttonLock) { //If BTNR shift mode to right
             delay_ms(50);
-            if (position == YZ)
-            {
+            if (position == YZ) {
                 position = XY;
-            }
-            else
-            {
+            } else {
                 position++;
             }
             buttonLock = 1;
-        }
-        else if (BTN_GetValue('U') && !buttonLock)
-        { //If BTNU set counter to count up
+        } else if (BTN_GetValue('U') && !buttonLock) { //If BTNU set counter to count up
             delay_ms(50);
-            if (sensitivity < 8)
-            {
+            if (sensitivity < 8) {
                 sensitivity *= 2;
                 delay_ms(100);
                 // switch (sensitivity)
@@ -213,12 +197,9 @@ int main(void)
                 // }
             }
             buttonLock = 1;
-        }
-        else if (BTN_GetValue('D') && !buttonLock)
-        { //If BTND reset counter to 0sec
+        } else if (BTN_GetValue('D') && !buttonLock) { //If BTND reset counter to 0sec
             delay_ms(50);
-            if (sensitivity > 2)
-            {
+            if (sensitivity > 2) {
                 sensitivity /= 2;
                 delay_ms(100);
                 // switch (sensitivity)
@@ -233,76 +214,58 @@ int main(void)
             }
             buttonLock = 1;
         }
-        if (buttonLock && !BTN_GetValue('C') && !BTN_GetValue('L') && !BTN_GetValue('R') && !BTN_GetValue('U') && !BTN_GetValue('D'))
-        {
+        if (buttonLock && !BTN_GetValue('C') && !BTN_GetValue('L') && !BTN_GetValue('R') && !BTN_GetValue('U') && !BTN_GetValue('D')) {
             delay_ms(50);
             buttonLock = 0;
         }
 
-        if (xVal < 0)
-        {
+        if (xVal < 0) {
             xPrecision = 1;
-        }
-        else
-        {
+        } else {
             xPrecision = 10;
         }
-        if (yVal < 0)
-        {
+        if (yVal < 0) {
             yPrecision = 1;
-        }
-        else
-        {
+        } else {
             yPrecision = 10;
         }
-        if (zVal < 0)
-        {
+        if (zVal < 0) {
             zPrecision = 1;
-        }
-        else
-        {
+        } else {
             zPrecision = 10;
         }
 
-        switch (position)
-        {
-        case XY:
-            sprintf(accelDisplay, "X:%.3f Y:%.3f", xVal, yVal);
-            update_SSD((int)(zVal * 100 * zPrecision));
-            break;
-        case ZX:
-            sprintf(accelDisplay, "Z:%.3f X:%.3f", zVal, xVal);
-            update_SSD((int)(yVal * 100 * yPrecision));
-            break;
-        case YZ:
-            sprintf(accelDisplay, "Y:%.3f Z:%.3f", yVal, zVal);
-            update_SSD((int)(xVal * 100 * xPrecision));
-            break;
+        switch (position) {
+            case XY:
+                sprintf(accelDisplay, "X:%.3f Y:%.3f", xVal, yVal);
+                update_SSD((int) (zVal * 100 * zPrecision));
+                break;
+            case ZX:
+                sprintf(accelDisplay, "Z:%.3f X:%.3f", zVal, xVal);
+                update_SSD((int) (yVal * 100 * yPrecision));
+                break;
+            case YZ:
+                sprintf(accelDisplay, "Y:%.3f Z:%.3f", yVal, zVal);
+                update_SSD((int) (xVal * 100 * xPrecision));
+                break;
         }
 
         //SW1 Controls
-        if (reading == 1 && counter <= 180)
-        {
-            if (flashes == 0)
-            {
+        if (reading == 1 && counter <= 180) {
+            if (flashes == 0) {
                 flashes++;
                 LCD_WriteStringAtPos("Erasing Flash", 0, 0);
                 SPIFLASH_EraseAll();
-            }
-            else if (flashes < 31)
-            {
+            } else if (flashes < 31) {
                 int i = 0;
                 LCD_WriteStringAtPos("Writing to Flash", 0, 0);
                 delay_ms(500);
-                for (i = 0; i < 6; i++)
-                {
+                for (i = 0; i < 6; i++) {
                     xyzSPIVals[6 * (flashes - 1) + i] = rawVals[i];
                     counter++;
                 }
                 flashes++;
-            }
-            else if (counter == 180)
-            {
+            } else if (counter == 180) {
                 SPIFLASH_ProgramPage(SPIFLASH_PROG_ADDR, xyzSPIVals, SPIFLASH_PROG_SIZE);
                 LCD_WriteStringAtPos("Written to Flash", 0, 0);
                 delay_ms(5000);
@@ -311,8 +274,7 @@ int main(void)
         uartCount = 0;
 
         //SW2 Controls
-        if (sw2 == 1)
-        {
+        if (sw2 == 1) {
             int i;
             int data = 0;
             int btnLock = 0;
@@ -322,8 +284,7 @@ int main(void)
             unsigned char zVal[2];
             SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
 
-            for (i = 0; i < 180; i = i + 6)
-            {
+            for (i = 0; i < 180; i = i + 6) {
                 xVal[0] = xyzSPIVals[i];
                 xVal[1] = xyzSPIVals[i + 1];
                 yVal[0] = xyzSPIVals[i + 2];
@@ -335,102 +296,75 @@ int main(void)
                 xyzSPIOut[(i / 2) + 2] = ACL_ConvertRawToValueG(zVal);
             }
 
-            while (sw2 == 1)
-            {
-                if (BTN_GetValue('U') && !btnLock)
-                { //If BTNU set counter to count up
+            while (sw2 == 1) {
+                if (BTN_GetValue('U') && !btnLock) { //If BTNU set counter to count up
                     delay_ms(50);
-                    if (data < 87)
-                    {
+                    if (data < 87) {
                         data += 3;
                     }
                     btnLock = 1;
-                }
-                else if (BTN_GetValue('D') && !btnLock)
-                { //If BTND reset counter to 0sec
+                } else if (BTN_GetValue('D') && !btnLock) { //If BTND reset counter to 0sec
                     delay_ms(50);
-                    if (data > 0)
-                    {
+                    if (data > 0) {
                         data -= 3;
                     }
                     btnLock = 1;
-                }
-                else if (BTN_GetValue('L') && !btnLock)
-                { //If BTNL shift mode to left
+                } else if (BTN_GetValue('L') && !btnLock) { //If BTNL shift mode to left
                     delay_ms(50);
-                    if (position == XY)
-                    {
+                    if (position == XY) {
                         position = YZ;
-                    }
-                    else
-                    {
+                    } else {
                         position--;
                     }
                     btnLock = 1;
-                }
-                else if (BTN_GetValue('R') && !btnLock)
-                { //If BTNR shift mode to right
+                } else if (BTN_GetValue('R') && !btnLock) { //If BTNR shift mode to right
                     delay_ms(50);
-                    if (position == YZ)
-                    {
+                    if (position == YZ) {
                         position = XY;
-                    }
-                    else
-                    {
+                    } else {
                         position++;
                     }
                     btnLock = 1;
                 }
                 sprintf(disp2, "Team: 1 SET: %d ", (data / 3) + 1);
                 LCD_WriteStringAtPos(disp2, 0, 0);
-                if (xyzSPIOut[data] < 0)
-                {
+                if (xyzSPIOut[data] < 0) {
                     xPrecision = 1;
-                }
-                else
-                {
+                } else {
                     xPrecision = 10;
                 }
-                if (xyzSPIOut[data + 1] < 0)
-                {
+                if (xyzSPIOut[data + 1] < 0) {
                     yPrecision = 1;
-                }
-                else
-                {
+                } else {
                     yPrecision = 10;
                 }
-                if (xyzSPIOut[data + 2] < 0)
-                {
+                if (xyzSPIOut[data + 2] < 0) {
                     zPrecision = 1;
-                }
-                else
-                {
+                } else {
                     zPrecision = 10;
                 }
 
-                switch (position)
-                {
-                case XY:
-                    sprintf(accelDisplay, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data + 1]);
-                    LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                    update_SSD((int)(zVal[data + 2] * 100 * zPrecision));
-                    break;
-                case ZX:
-                    sprintf(accelDisplay, "Z:%.3f X:%.3f", xyzSPIOut[data + 2], xyzSPIOut[data]);
-                    LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                    update_SSD((int)(yVal[data + 1] * 100 * yPrecision));
-                    break;
-                case YZ:
-                    sprintf(accelDisplay, "Y:%.3f Z:%.3f", xyzSPIOut[data + 1], xyzSPIOut[data + 2]);
-                    LCD_WriteStringAtPos(accelDisplay, 1, 0);
-                    update_SSD((int)(xVal[data] * 100 * xPrecision));
-                    break;
+                switch (position) {
+                    case XY:
+                        sprintf(accelDisplay, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data + 1]);
+                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                        update_SSD((int) (zVal[data + 2] * 100 * zPrecision));
+                        break;
+                    case ZX:
+                        sprintf(accelDisplay, "Z:%.3f X:%.3f", xyzSPIOut[data + 2], xyzSPIOut[data]);
+                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                        update_SSD((int) (yVal[data + 1] * 100 * yPrecision));
+                        break;
+                    case YZ:
+                        sprintf(accelDisplay, "Y:%.3f Z:%.3f", xyzSPIOut[data + 1], xyzSPIOut[data + 2]);
+                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                        update_SSD((int) (xVal[data] * 100 * xPrecision));
+                        break;
                 }
             }
         }
 
-        while (SWT_GetValue(6))
-        {
+        while (SWT_GetValue(6)) {
             sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, xVal, yVal, zVal);
             UART_PutString(uartMsg);
             uartCount++;
@@ -470,8 +404,7 @@ int main(void)
 //     UpdateCoreTimer(CORE_TICK_RATE* sampleRate);
 // }
 
-void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void)
-{
+void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void) {
     ACL_ReadRawValues(rawVals);
     mCTClearIntFlag();
     float xyzGvals[3];
@@ -487,45 +420,37 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void)
     else if (zVal > xVal && zVal > yVal)
         RGBLED_SetValue(0, 0, 255);
 
-    if (SWT_GetValue(1) && !SWT_GetValue(2) && reading == 0)
-    {
+    if (SWT_GetValue(1) && !SWT_GetValue(2) && reading == 0) {
         reading = 1;
     }
-    if (SWT_GetValue(1) == 0 && reading == 1)
-    {
+    if (SWT_GetValue(1) == 0 && reading == 1) {
         flashes = 0;
         counter = 0;
         reading = 0;
     }
-    if (SWT_GetValue(2) && !SWT_GetValue(1) && sw2 == 0)
-    {
+    if (SWT_GetValue(2) && !SWT_GetValue(1) && sw2 == 0) {
         sw2 = 1;
     }
-    if (SWT_GetValue(2) == 0)
-    {
+    if (SWT_GetValue(2) == 0) {
         sw2 = 0;
     }
 
     UpdateCoreTimer(CORE_TICK_RATE * sampleRate);
 }
 
-void update_SSD(int value)
-{
+void update_SSD(int value) {
     int hunds, tens, ones, tenths;
     int dec1, dec2;
     char SSD1 = 0b0000000; //SSD setting for 1st SSD (LSD)
     char SSD2 = 0b0000000; //SSD setting for 2nd SSD
     char SSD3 = 0b0000000; //SSD setting for 3rd SSD
     char SSD4 = 0b0000000; //SSD setting for 4th SSD (MSD)
-    if (value < 0)
-    {
+    if (value < 0) {
         SSD4 = 17;
         value = -1 * value;
         dec1 = 0;
         dec2 = 1;
-    }
-    else
-    {
+    } else {
         dec1 = 1;
         dec2 = 0;
         hunds = floor(value / 1000);
@@ -544,13 +469,10 @@ void update_SSD(int value)
     SSD_WriteDigits(SSD1, SSD2, SSD3, SSD4, 0, 0, dec2, dec1);
 }
 
-void delay_ms(int ms)
-{
+void delay_ms(int ms) {
     int i, counter;
-    for (counter = 0; counter < ms; counter++)
-    {
-        for (i = 0; i < 300; i++)
-        {
+    for (counter = 0; counter < ms; counter++) {
+        for (i = 0; i < 300; i++) {
         } //software delay ~1 millisec
     }
 }
