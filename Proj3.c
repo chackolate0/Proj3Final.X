@@ -138,6 +138,7 @@ unsigned char gVals[80];
 //variables for uart
 char uartMsg[80];
 int uartCount = 0;
+char sw7 = 0;
 
 int main(void) {
     BTN_Init();
@@ -370,6 +371,99 @@ int main(void) {
             uartCount++;
         }
 
+        if (sw7) {
+            int i;
+            int data = 0;
+            int btnLock = 0;
+            char disp2[80];
+            unsigned char xVal[2];
+            unsigned char yVal[2];
+            unsigned char zVal[2];
+            SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
+
+            for (i = 0; i < 180; i = i + 6) {
+                xVal[0] = xyzSPIVals[i];
+                xVal[1] = xyzSPIVals[i + 1];
+                yVal[0] = xyzSPIVals[i + 2];
+                yVal[1] = xyzSPIVals[i + 3];
+                zVal[0] = xyzSPIVals[i + 4];
+                zVal[1] = xyzSPIVals[i + 5];
+                xyzSPIOut[(i / 2)] = ACL_ConvertRawToValueG(xVal);
+                xyzSPIOut[(i / 2) + 1] = ACL_ConvertRawToValueG(yVal);
+                xyzSPIOut[(i / 2) + 2] = ACL_ConvertRawToValueG(zVal);
+            }
+
+            while (sw2 == 1) {
+                if (BTN_GetValue('U') && !btnLock) { //If BTNU set counter to count up
+                    delay_ms(50);
+                    if (data < 87) {
+                        data += 3;
+                    }
+                    btnLock = 1;
+                } else if (BTN_GetValue('D') && !btnLock) { //If BTND reset counter to 0sec
+                    delay_ms(50);
+                    if (data > 0) {
+                        data -= 3;
+                    }
+                    btnLock = 1;
+                } else if (BTN_GetValue('L') && !btnLock) { //If BTNL shift mode to left
+                    delay_ms(50);
+                    if (position == XY) {
+                        position = YZ;
+                    } else {
+                        position--;
+                    }
+                    btnLock = 1;
+                } else if (BTN_GetValue('R') && !btnLock) { //If BTNR shift mode to right
+                    delay_ms(50);
+                    if (position == YZ) {
+                        position = XY;
+                    } else {
+                        position++;
+                    }
+                    btnLock = 1;
+                }
+                sprintf(disp2, "Team: 1 SET: %d ", (data / 3) + 1);
+                LCD_WriteStringAtPos(disp2, 0, 0);
+                if (xyzSPIOut[data] < 0) {
+                    xPrecision = 1;
+                } else {
+                    xPrecision = 10;
+                }
+                if (xyzSPIOut[data + 1] < 0) {
+                    yPrecision = 1;
+                } else {
+                    yPrecision = 10;
+                }
+                if (xyzSPIOut[data + 2] < 0) {
+                    zPrecision = 1;
+                } else {
+                    zPrecision = 10;
+                }
+
+                switch (position) {
+                    case XY:
+                        sprintf(accelDisplay, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data + 1]);
+                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                        update_SSD((int) (zVal[data + 2] * 100 * zPrecision));
+                        break;
+                    case ZX:
+                        sprintf(accelDisplay, "Z:%.3f X:%.3f", xyzSPIOut[data + 2], xyzSPIOut[data]);
+                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                        update_SSD((int) (yVal[data + 1] * 100 * yPrecision));
+                        break;
+                    case YZ:
+                        sprintf(accelDisplay, "Y:%.3f Z:%.3f", xyzSPIOut[data + 1], xyzSPIOut[data + 2]);
+                        LCD_WriteStringAtPos(accelDisplay, 1, 0);
+                        update_SSD((int) (xVal[data] * 100 * xPrecision));
+                        break;
+                }
+            sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, xVal, yVal, zVal);
+            UART_PutString(uartMsg);
+            uartCount++;
+            }
+        }
+
         sprintf(sensitivityDisplay, "Team: 1 SENS: %dG", sensitivity);
         LCD_WriteStringAtPos(sensitivityDisplay, 0, 0);
         LCD_WriteStringAtPos(accelDisplay, 1, 0);
@@ -433,6 +527,9 @@ void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void) {
     }
     if (SWT_GetValue(2) == 0) {
         sw2 = 0;
+    }
+    if (SWT_GetValue(7)) {
+        sw7 = 0;
     }
 
     UpdateCoreTimer(CORE_TICK_RATE * sampleRate);
