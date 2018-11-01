@@ -12,7 +12,7 @@
     Brief description of the file.
 
   @Description
-    Describe the purpose of this file.
+ PROJECT 3
  */
 
 // PIC32MX370F512L Configuration Bit Settings
@@ -95,30 +95,27 @@
 #define SPIFLASH_PROG_ADDR 0x100
 #define SPIFLASH_PROG_SIZE 3 * NUMBER_DATA_POINTS * sizeof(signed short int)
 
-int potVal;
 
-enum displayState {
+enum aclState {
     XY,
     ZX,
     YZ
 };
-int position = XY;
-int buttonLock = 0;
+
+int posXYZ = XY;
+int btnLck = 0;
 
 char aclDisp[80];
 char sensitivityDisplay[80] = "Team 1: SENS: 2G";
-float xVal = 1.303;
-float yVal = -4.70;
-float zVal = 0.132;
+unsigned char x = 1.303;
+unsigned char y = -4.70;
+unsigned char z = 0.132;
 int xPrec;
 int yPrec;
 int zPrec;
 
 int sensitivity = 2;
 
-short int xshorVal;
-short int yshorVal;
-short int zshorVal;
 
 int potVal;
 int sampleRate;
@@ -163,26 +160,23 @@ int main(void) {
         potVal = ADC_AnalogRead(2);
         sampleRate = (potVal * (10 - 1)) / 1023 + 1;
 
-        if (BTN_GetValue('C') && !buttonLock) { //If BTNC is pressed stop timer and shifting
+            if (BTN_GetValue('L') && !btnLck) { 
             delay_ms(50);
-            buttonLock = 1;
-        } else if (BTN_GetValue('L') && !buttonLock) { //If BTNL shift mode to left
-            delay_ms(50);
-            if (position == XY) {
-                position = YZ;
+            if (posXYZ == XY) {
+                posXYZ = YZ;
             } else {
-                position--;
+                posXYZ--;
             }
-            buttonLock = 1;
-        } else if (BTN_GetValue('R') && !buttonLock) { //If BTNR shift mode to right
+            btnLck = 1;
+        } else if (BTN_GetValue('R') && !btnLck) { 
             delay_ms(50);
-            if (position == YZ) {
-                position = XY;
+            if (posXYZ == YZ) {
+                posXYZ = XY;
             } else {
-                position++;
+                posXYZ++;
             }
-            buttonLock = 1;
-        } else if (BTN_GetValue('U') && !buttonLock) { //If BTNU set counter to count up
+            btnLck = 1;
+        } else if (BTN_GetValue('U') && !btnLck) { 
             delay_ms(50);
             if (sensitivity < 8) {
                 sensitivity *= 2;
@@ -197,8 +191,8 @@ int main(void) {
                 //     ACL_SetRange(2);
                 // }
             }
-            buttonLock = 1;
-        } else if (BTN_GetValue('D') && !buttonLock) { //If BTND reset counter to 0sec
+            btnLck = 1;
+        } else if (BTN_GetValue('D') && !btnLck) { 
             delay_ms(50);
             if (sensitivity > 2) {
                 sensitivity /= 2;
@@ -213,41 +207,41 @@ int main(void) {
                 //     ACL_SetRange(2);
                 // }
             }
-            buttonLock = 1;
+            btnLck = 1;
         }
-        if (buttonLock && !BTN_GetValue('C') && !BTN_GetValue('L') && !BTN_GetValue('R') && !BTN_GetValue('U') && !BTN_GetValue('D')) {
+        if (btnLck && !BTN_GetValue('C') && !BTN_GetValue('L') && !BTN_GetValue('R') && !BTN_GetValue('U') && !BTN_GetValue('D')) {
             delay_ms(50);
-            buttonLock = 0;
+            btnLck = 0;
         }
 
-        if (xVal < 0) {
+        if (x < 0) {
             xPrec = 1;
         } else {
             xPrec = 10;
         }
-        if (yVal < 0) {
+        if (y < 0) {
             yPrec = 1;
         } else {
             yPrec = 10;
         }
-        if (zVal < 0) {
+        if (z < 0) {
             zPrec = 1;
         } else {
             zPrec = 10;
         }
 
-        switch (position) {
+        switch (posXYZ) {
             case XY:
-                sprintf(aclDisp, "X:%.3f Y:%.3f", xVal, yVal);
-                update_SSD((int) (zVal * 100 * zPrec));
+                sprintf(aclDisp, "X:%.3f Y:%.3f", x, y);
+                update_SSD((int) (z * 100 * zPrec));
                 break;
             case ZX:
-                sprintf(aclDisp, "Z:%.3f X:%.3f", zVal, xVal);
-                update_SSD((int) (yVal * 100 * yPrec));
+                sprintf(aclDisp, "Z:%.3f X:%.3f", z, x);
+                update_SSD((int) (y * 100 * yPrec));
                 break;
             case YZ:
-                sprintf(aclDisp, "Y:%.3f Z:%.3f", yVal, zVal);
-                update_SSD((int) (xVal * 100 * xPrec));
+                sprintf(aclDisp, "Y:%.3f Z:%.3f", y, z);
+                update_SSD((int) (x * 100 * xPrec));
                 break;
         }
 
@@ -260,9 +254,8 @@ int main(void) {
             } else if (flashes < 31) {
                 int i = 0;
                 LCD_WriteStringAtPos("Writing to Flash", 0, 0);
-                delay_ms(500);
-                for (i = 0; i < 6; i++) {
-                    xyzSPIVals[6 * (flashes - 1) + i] = rawVals[i];
+                for (i = 0; i < 36; i++) {
+                    xyzSPIVals[6 * (flashes - 1) + i/6] = rawVals[i/6];
                     counter++;
                 }
                 flashes++;
@@ -280,21 +273,21 @@ int main(void) {
             int data = 0;
             int btnLock = 0;
             char disp2[80];
-            unsigned char xVal[2];
-            unsigned char yVal[2];
-            unsigned char zVal[2];
+            unsigned char xTemp[2];
+            unsigned char yTemp[2];
+            unsigned char zTemp[2];
             SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
 
-            for (i = 0; i < 180; i = i + 6) {
-                xVal[0] = xyzSPIVals[i];
-                xVal[1] = xyzSPIVals[i + 1];
-                yVal[0] = xyzSPIVals[i + 2];
-                yVal[1] = xyzSPIVals[i + 3];
-                zVal[0] = xyzSPIVals[i + 4];
-                zVal[1] = xyzSPIVals[i + 5];
-                xyzSPIOut[(i / 2)] = ACL_ConvertRawToValueG(xVal);
-                xyzSPIOut[(i / 2) + 1] = ACL_ConvertRawToValueG(yVal);
-                xyzSPIOut[(i / 2) + 2] = ACL_ConvertRawToValueG(zVal);
+            for (i = 0; i < 90; i = i + 6) {
+                xTemp[0] = xyzSPIVals[i/2];
+                xTemp[1] = xyzSPIVals[i/2 + 1];
+                yTemp[0] = xyzSPIVals[i/2 + 2];
+                yTemp[1] = xyzSPIVals[i/2 + 3];
+                zTemp[0] = xyzSPIVals[i/2 + 4];
+                zTemp[1] = xyzSPIVals[i/2 + 5];
+                xyzSPIOut[i] = ACL_ConvertRawToValueG(xTemp);
+                xyzSPIOut[i + 1] = ACL_ConvertRawToValueG(yTemp);
+                xyzSPIOut[i + 2] = ACL_ConvertRawToValueG(zTemp);
             }
 
             while (sw2 == 1) {
@@ -312,32 +305,32 @@ int main(void) {
                     btnLock = 1;
                 } else if (BTN_GetValue('L') && !btnLock) { //If BTNL shift mode to left
                     delay_ms(50);
-                    if (position == XY) {
-                        position = YZ;
+                    if (posXYZ == XY) {
+                        posXYZ = YZ;
                     } else {
-                        position--;
+                        posXYZ--;
                     }
                     btnLock = 1;
                 } else if (BTN_GetValue('R') && !btnLock) { //If BTNR shift mode to right
                     delay_ms(50);
-                    if (position == YZ) {
-                        position = XY;
+                    if (posXYZ == YZ) {
+                        posXYZ = XY;
                     } else {
-                        position++;
+                        posXYZ++;
                     }
                     btnLock = 1;
                 }
                 sprintf(disp2, "Team: 1 SET: %d ", (data / 3) + 1);
                 LCD_WriteStringAtPos(disp2, 0, 0);
-                if (xyzSPIOut[data] < 0) {
-                    xPrec = 1;
-                } else {
-                    xPrec = 10;
-                }
                 if (xyzSPIOut[data + 1] < 0) {
                     yPrec = 1;
                 } else {
                     yPrec = 10;
+                }
+                if (xyzSPIOut[data] < 0) {
+                    xPrec = 1;
+                } else {
+                    xPrec = 10;
                 }
                 if (xyzSPIOut[data + 2] < 0) {
                     zPrec = 1;
@@ -345,28 +338,28 @@ int main(void) {
                     zPrec = 10;
                 }
 
-                switch (position) {
+                switch (posXYZ) {
                     case XY:
-                        sprintf(aclDisp, "X:%.3f Y:%.3f", ACL_ConvertRawToValueG(xVal), ACL_ConvertRawToValueG(yVal));
+                        sprintf(aclDisp, "X:%.3f Y:%.3f", ACL_ConvertRawToValueG(x), ACL_ConvertRawToValueG(y));
                         LCD_WriteStringAtPos(aclDisp, 1, 0);
-                        update_SSD((int) (zVal[data + 2] * 100 * zPrec));
+                        update_SSD((int) (data + 2 * 100 * zPrec));
                         break;
                     case ZX:
-                        sprintf(aclDisp, "Z:%.3f X:%.3f", ACL_ConvertRawToValueG(zVal), ACL_ConvertRawToValueG(xVal));
+                        sprintf(aclDisp, "Z:%.3f X:%.3f", ACL_ConvertRawToValueG(z), ACL_ConvertRawToValueG(x));
                         LCD_WriteStringAtPos(aclDisp, 1, 0);
-                        update_SSD((int) (yVal[data + 1] * 100 * yPrec));
+                        update_SSD((int) (data + 1 * 100 * yPrec));
                         break;
                     case YZ:
-                        sprintf(aclDisp, "Y:%.3f Z:%.3f", ACL_ConvertRawToValueG(yVal), ACL_ConvertRawToValueG(zVal));
+                        sprintf(aclDisp, "Y:%.3f Z:%.3f", ACL_ConvertRawToValueG(y), ACL_ConvertRawToValueG(z));
                         LCD_WriteStringAtPos(aclDisp, 1, 0);
-                        update_SSD((int) (xVal[data] * 100 * xPrec));
+                        update_SSD((int) (data * 100 * xPrec));
                         break;
                 }
             }
         }
 
         while (SWT_GetValue(6)) {
-            sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, xVal, yVal, zVal);
+            sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, x, y, z);
             UART_PutString(uartMsg);
             uartCount++;
         }
@@ -376,24 +369,24 @@ int main(void) {
             int data = 0;
             int btnLock = 0;
             char disp2[80];
-            unsigned char xVal[2];
-            unsigned char yVal[2];
-            unsigned char zVal[2];
+            unsigned char x[2];
+            unsigned char y[2];
+            unsigned char z[2];
             SPIFLASH_Read(SPIFLASH_PROG_ADDR, xyzSPIOut, SPIFLASH_PROG_SIZE);
 
             for (i = 0; i < 180; i = i + 6) {
-                xVal[0] = xyzSPIVals[i];
-                xVal[1] = xyzSPIVals[i + 1];
-                yVal[0] = xyzSPIVals[i + 2];
-                yVal[1] = xyzSPIVals[i + 3];
-                zVal[0] = xyzSPIVals[i + 4];
-                zVal[1] = xyzSPIVals[i + 5];
-                xyzSPIOut[(i / 2)] = ACL_ConvertRawToValueG(xVal);
-                xyzSPIOut[(i / 2) + 1] = ACL_ConvertRawToValueG(yVal);
-                xyzSPIOut[(i / 2) + 2] = ACL_ConvertRawToValueG(zVal);
+                x[0] = xyzSPIVals[i];
+                x[1] = xyzSPIVals[i + 1];
+                y[0] = xyzSPIVals[i + 2];
+                y[1] = xyzSPIVals[i + 3];
+                z[0] = xyzSPIVals[i + 4];
+                z[1] = xyzSPIVals[i + 5];
+                xyzSPIOut[(i / 2)] = ACL_ConvertRawToValueG(x);
+                xyzSPIOut[(i / 2) + 1] = ACL_ConvertRawToValueG(y);
+                xyzSPIOut[(i / 2) + 2] = ACL_ConvertRawToValueG(z);
             }
 
-            while (sw2 == 1) {
+            while (sw7 == 1) {
                 if (BTN_GetValue('U') && !btnLock) { //If BTNU set counter to count up
                     delay_ms(50);
                     if (data < 87) {
@@ -408,18 +401,18 @@ int main(void) {
                     btnLock = 1;
                 } else if (BTN_GetValue('L') && !btnLock) { //If BTNL shift mode to left
                     delay_ms(50);
-                    if (position == XY) {
-                        position = YZ;
+                    if (posXYZ == XY) {
+                        posXYZ = YZ;
                     } else {
-                        position--;
+                        posXYZ--;
                     }
                     btnLock = 1;
                 } else if (BTN_GetValue('R') && !btnLock) { //If BTNR shift mode to right
                     delay_ms(50);
-                    if (position == YZ) {
-                        position = XY;
+                    if (posXYZ == YZ) {
+                        posXYZ = XY;
                     } else {
-                        position++;
+                        posXYZ++;
                     }
                     btnLock = 1;
                 }
@@ -441,24 +434,24 @@ int main(void) {
                     zPrec = 10;
                 }
 
-                switch (position) {
+                switch (posXYZ) {
                     case XY:
                         sprintf(aclDisp, "X:%.3f Y:%.3f", xyzSPIOut[data], xyzSPIOut[data + 1]);
                         LCD_WriteStringAtPos(aclDisp, 1, 0);
-                        update_SSD((int) (zVal[data + 2] * 100 * zPrec));
+                        update_SSD((int) (z[data + 2] * 100 * zPrec));
                         break;
                     case ZX:
                         sprintf(aclDisp, "Z:%.3f X:%.3f", xyzSPIOut[data + 2], xyzSPIOut[data]);
                         LCD_WriteStringAtPos(aclDisp, 1, 0);
-                        update_SSD((int) (yVal[data + 1] * 100 * yPrec));
+                        update_SSD((int) (y[data + 1] * 100 * yPrec));
                         break;
                     case YZ:
                         sprintf(aclDisp, "Y:%.3f Z:%.3f", xyzSPIOut[data + 1], xyzSPIOut[data + 2]);
                         LCD_WriteStringAtPos(aclDisp, 1, 0);
-                        update_SSD((int) (xVal[data] * 100 * xPrec));
+                        update_SSD((int) (x[data] * 100 * xPrec));
                         break;
                 }
-            sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, xVal, yVal, zVal);
+            sprintf(uartMsg, "%d,%6.4f,%6.4f,%6.4f\n\r", uartCount, x, y, z);
             UART_PutString(uartMsg);
             uartCount++;
             }
@@ -475,43 +468,22 @@ int main(void) {
     }
 }
 
-// void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
-//     mCTClearIntFlag();
-//     //ACL_ReadRawValues(posValues);
-//     float xyzGvals[3];
-//     ACL_ReadGValues(xyzGvals);
-//     /*xshorVal=(((unsigned short)posValues[0]<<4)+((posValues[1])>>4));
-//     yshorVal=(((unsigned short)posValues[2]<<4)+((posValues[3])>>4));
-//     zshorVal=(((unsigned short)posValues[4]<<4)+((posValues[5])>>4));
-//     if(xshorVal & (1<<11)){
-//     xshorVal |= 0xF000; //xVal=(short)~(xVal)+1;
-//     }
-//     if(yshorVal & (1<<11)){
-//     yshorVal |= 0xF000; //yVal=(short)~(yVal)+1;
-//     }
-//     if(zshorVal & (1<<11)){
-//     zshorVal |= 0xF000; //zVal=(short)~(zVal)+1;
-//     }*/
-//     xVal = xyzGvals[0];
-//     yVal = xyzGvals[1];
-//     zVal = xyzGvals[2];
-//     UpdateCoreTimer(CORE_TICK_RATE* sampleRate);
-// }
+
 
 void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void) {
     ACL_ReadRawValues(rawVals);
     mCTClearIntFlag();
     float xyzGvals[3];
     ACL_ReadGValues(xyzGvals);
-    xVal = xyzGvals[0];
-    yVal = xyzGvals[1];
-    zVal = xyzGvals[2];
+    x = xyzGvals[0];
+    y = xyzGvals[1];
+    z = xyzGvals[2];
 
-    if (fabs(xVal) > fabs(yVal) && fabs(xVal) > fabs(zVal))
+    if (fabs(x) > fabs(y) && fabs(x) > fabs(z))
         RGBLED_SetValue(255, 0, 0);
-    else if (fabs(yVal) > fabs(xVal) && fabs(yVal) > fabs(zVal))
+    else if (fabs(y) > fabs(x) && fabs(y) > fabs(z))
         RGBLED_SetValue(0, 255, 0);
-    else if (fabs(zVal) > fabs(xVal) && fabs(zVal) > fabs(yVal))
+    else if (fabs(z) > fabs(x) && fabs(z) > fabs(y))
         RGBLED_SetValue(0, 0, 255);
 
     if (SWT_GetValue(1) && !SWT_GetValue(2) && reading == 0) {
